@@ -20,6 +20,12 @@ def RGB(r,g,b):
     red = PWM(Pin(R), freq=1000, duty=int(1023*r/255))
     green = PWM(Pin(G), freq=1000, duty=int(1023*g/255))
     blue = PWM(Pin(B), freq=1000, duty=int(1023*b/255))
+    
+    
+import dht, time
+
+signal = 15
+dht11 = dht.DHT11(Pin(signal))
 #Setup webserver
 import tinyweb
 
@@ -28,7 +34,6 @@ import tinyweb
 app = tinyweb.webserver()
 
 class LedControl():
-
     def get(self, data):
         """Return list of all customers"""
         return db
@@ -37,7 +42,7 @@ class LedControl():
         """Add customer"""
         global next_id
         print(data)
-        RGB(data['red'], data['green'], data['blue'])
+        RGB(int(data['red']), int(data['green']), int(data['blue']))
         db[str(next_id)] = data
         next_id += 1
         # Return message AND set HTTP response code to "201 Created"
@@ -52,6 +57,11 @@ async def files_css(req, resp, fn):
 async def files_js(req, resp, fn):
     file = 'static/js/{}'.format(fn)
     await resp.send_file(file)
+    
+@app.resource('/dht11')
+def user(data):
+    dht11.measure()
+    return {'temp': dht11.temperature(), 'humid': dht11.humidity()}
 # Index page
 @app.route('/')
 async def index(request, response):
